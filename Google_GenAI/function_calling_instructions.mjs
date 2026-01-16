@@ -1,49 +1,53 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-// 1. Define the tool
-const weatherTool = {
-    type: 'function',
-    name: 'get_weather',
-    description: 'Gets the weather for a given location.',
-    parameters: {
-        type: 'object',
-        properties: {
-            location: { type: 'string', description: 'The city and state, e.g. San Francisco, CA' }
-        },
-        required: ['location']
-    }
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+
+// Define the function declaration for the model
+const weatherFunctionDeclaration = {
+  name: 'get_person_detail',
+  description: 'Gets person detail',
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      name: {
+        type: Type.STRING,
+        description: 'The person name, e.g. Bob',
+      },
+      email: {
+        type: Type.STRING,
+        description: 'The email id, e.g. Bob@gmail.com',
+      },
+      laptop: {
+        type: Type.STRING,
+        description: 'The Laptop name, e.g. Lenovo',
+      },
+    },
+    required: ['name', 'email', 'laptop'],
+  },
 };
 
-// 2. Send the request with tools
-let interaction =  await client.interactions.create({
-    model: 'gemini-3-flash-preview',
-    input: 'What is the weather in Paris?',
-    tools: [weatherTool]
+// Send request with function declarations
+const response = await ai.models.generateContent({
+  model: 'gemini-3-flash-preview',
+  contents: "My name is Raj. My email id is raj@gmail.com and I have issue in Dell Laptop.",
+  config: {
+    tools: [{
+      functionDeclarations: [weatherFunctionDeclaration]
+    }],
+  },
 });
 
-// 3. Handle the tool call
-for (const output of interaction.outputs) {
-    if (output.type === 'function_call') {
-        console.log(`Tool Call: ${output.name}(${JSON.stringify(output.arguments)})`);
-
-        // Execute tool (Mocked)
-        const result = `The weather in ${output.arguments.location} is sunny.`;
-        console.log(`Result: ${result}`);
-
-        // Send result back
-        interaction =  await client.interactions.create({
-            model: 'gemini-3-flash-preview',
-            previous_interaction_id: interaction.id,
-            input: [{
-                type: 'function_result',
-                name: output.name,
-                call_id: output.id,
-                result: result
-            }]
-        });
-        console.log(`Response: ${interaction.outputs[interaction.outputs.length - 1].text}`);
-    }
+// Check for function calls in the response
+if (response.functionCalls && response.functionCalls.length > 0) {
+  const functionCall = response.functionCalls[0]; // Assuming one function call
+  console.log(`Function to call: ${functionCall.name}`);
+  console.log(`Arguments: ${JSON.stringify(functionCall.args)}`);
+  // In a real app, you would call your actual function here:
+  // const result = await getCurrentTemperature(functionCall.args);
+} else {
+  console.log("No function call found in the response.");
+  console.log(response.text);
 }
