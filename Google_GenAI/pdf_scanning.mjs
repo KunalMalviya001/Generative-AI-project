@@ -10,10 +10,10 @@ async function main() {
     // const pdfResp = await fetch('Resume-Sample-1-Software-Engineer.pdf')
     //     .then((response) => response.arrayBuffer());
 
-    const pdfResp = fs.readFileSync('Resume-Sample-1-Software-Engineer.pdf')
+    const pdfResp = fs.readFileSync('Demo_PDF.pdf')
 
     const contents = [
-        { text: "What is ATS score of file in one line" },
+        { text: "What is ATS score of file in one line"},
         {
             inlineData: {
                 mimeType: 'application/pdf',
@@ -26,7 +26,7 @@ async function main() {
         model: "gemini-2.5-flash",
         contents: contents
     });
-    console.log(response.text);
+    console.log("\n\n" + response.text + "\n\n");
 }
 
 main();
