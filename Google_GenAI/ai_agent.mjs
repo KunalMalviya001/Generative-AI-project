@@ -47,10 +47,6 @@ const model = genAI.getGenerativeModel({
   
   async function searchTool(query) {
     console.log("TOOL CALLED:", query);
-    
-    // =================================================================================================
-    // =================================================================================================
-    // Mock data (replace with real API later)
     return `
     JavaScript facts:
     - Creator: Brendan Eich
@@ -103,7 +99,7 @@ async function runAgent(userQuestion) {
           continue;
         }
       } catch {
-        // fall through to final answer
+        console.log("error");
       }
     }
     
